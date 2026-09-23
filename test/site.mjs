@@ -18,6 +18,16 @@ try {
     if (!route.endsWith('.xml')) assert.ok((await page.title()).length >= 12, `Missing title: ${route}`);
   }
   await page.goto(base, { waitUntil: 'networkidle' });
+  await page.evaluate(() => localStorage.removeItem('pcr-site-language'));
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.equal(await page.locator('html').getAttribute('lang'), 'en');
+  assert.equal(await page.locator('[data-site-language]').inputValue(), 'en');
+  assert.equal(await page.locator('.brand img').first().getAttribute('src'), 'icons/new-icon.png');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).wordBreak), 'keep-all');
+  await page.locator('[data-site-language]').selectOption('ko');
+  assert.equal(await page.locator('html').getAttribute('lang'), 'ko');
+  assert.match(await page.locator('h1').first().textContent(), /어떤 색/);
+  await page.locator('[data-site-language]').selectOption('en');
   assert.ok((await page.locator('meta[name="description"]').getAttribute('content')).length >= 80);
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), 'https://imjaeseokk.github.io/personal-color-remapper/');
   for (const text of await page.locator('script[type="application/ld+json"]').allTextContents()) JSON.parse(text);
@@ -30,11 +40,14 @@ try {
   await page.getByRole('tab', { name: 'English' }).click();
   assert.equal(await page.locator('[data-language="en"]').isVisible(), true);
   assert.equal(await page.locator('[data-language="ko"]').isHidden(), true);
+  for (const width of [390, 640, 1024, 1920]) {
+    await page.setViewportSize({ width, height: 844 }); await page.goto(base, { waitUntil: 'networkidle' });
+    const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(element => {
+      const rect = element.getBoundingClientRect(); return rect.right > innerWidth + 1;
+    }).map(element => ({ tag: element.tagName, className: element.className, right: Math.round(element.getBoundingClientRect().right) })).slice(0, 10));
+    assert.deepEqual(overflow, [], `${width}px horizontal overflow: ${JSON.stringify(overflow)}`);
+  }
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto(base, { waitUntil: 'networkidle' });
-  const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(element => {
-    const rect = element.getBoundingClientRect(); return rect.right > innerWidth + 1;
-  }).map(element => ({ tag: element.tagName, className: element.className, right: Math.round(element.getBoundingClientRect().right) })).slice(0, 10));
-  assert.deepEqual(overflow, [], `Mobile horizontal overflow: ${JSON.stringify(overflow)}`);
   await page.screenshot({ path: path.join(root, 'test-results/site-home-mobile-fold.png') });
   await page.locator('.nav-toggle').click(); assert.equal(await page.locator('.nav-links').getAttribute('class'), 'nav-links open');
   await page.screenshot({ path: path.join(root, 'test-results/site-home-mobile.png'), fullPage: true });

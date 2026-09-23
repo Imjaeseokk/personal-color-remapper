@@ -8,6 +8,7 @@
     "test:browser": "node test/browser.mjs",
     "fixture": "node test/serve.mjs",
     "test:sites": "node test/sites.mjs",
+    "screenshots:site": "node scripts/site-screenshots.mjs",
     "package": "node scripts/package.mjs"
   },
   "devDependencies": {
