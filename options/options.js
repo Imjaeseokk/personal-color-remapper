@@ -14,7 +14,7 @@ function render() {
   draft = structuredClone(selected === 'global' ? state.globalProfile : state.profiles[selected]);
   $('enabled').checked = state.settings.enabled; $('name').value = draft.name; $('profile-enabled').checked = draft.enabled;
   $('scope').textContent = selected === 'global' ? 'Global palette' : selected;
-  $('delete').disabled = selected === 'global'; editor.set(draft.rules); $('save').disabled = false; dirty = false;
+  $('delete').disabled = selected === 'global'; editor.set(draft.rules, selected); $('save').disabled = false; dirty = false;
 }
 function changed() { draft.name = $('name').value; draft.enabled = $('profile-enabled').checked; dirty = true; status('Unsaved edits. Save to apply to open pages.'); }
 async function permissions() {

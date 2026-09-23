@@ -14,13 +14,16 @@
         button{padding:9px 12px;background:#edf1f6;color:#172332;border:1px solid #748094;border-radius:8px;cursor:pointer;margin:4px 2px}button.primary{background:#203f73;color:white}button:disabled{opacity:.5;cursor:default}
         :focus-visible{outline:3px solid #805800;outline-offset:3px}input[type=range]{width:100%}
         #box{position:fixed;border:3px dashed #111;outline:2px solid white;pointer-events:none;display:none}
-        #notice{min-height:22px}small{display:block}
+        #notice{min-height:22px}small{display:block}.suggestions{display:grid;gap:6px;margin:8px 0}.suggestion{display:grid;grid-template-columns:22px 1fr;gap:8px;text-align:left;align-items:center;margin:0}.dot{width:20px;height:20px;border:1px solid #667;border-radius:6px}.hint{font-size:11px;color:#526071}.inline{display:flex;gap:6px}.inline input{flex:1}
       </style><div id="box"></div><section role="dialog" aria-label="Choose and replace a page color">
         <h2>Pick your color</h2><p>Click a page element, or Tab to an element and press Enter. Escape cancels.</p>
         <button id="native">Screen eyedropper</button><button id="cancel">Cancel</button>
+        <details open><summary>Likely red/green confusion colors</summary><div id="suggestions" class="suggestions"><small>Analyzing colors used on this page…</small></div></details>
         <label>Element color property<select id="property" aria-label="Selected element color property"><option>Select a page element first</option></select></label>
+        <label>Rule name<div class="inline"><input id="name" type="text" maxlength="120"><button id="default-name" type="button">Default</button></div></label>
         <label>Source HEX<input id="source" type="text" value="#28A745" maxlength="7"></label>
         <label>Replace with<input id="target" type="color" value="#2979ff" aria-label="Replacement color"><input id="hex" type="text" value="#2979FF" maxlength="7" aria-label="Replacement HEX"></label>
+        <button id="recommend" type="button">Auto target · same brightness & saturation</button>
         <label>Similarity <output id="value">${P.C.THRESHOLD_DEFAULT}</output><input id="range" type="range" min="${P.C.THRESHOLD_MIN}" max="${P.C.THRESHOLD_MAX}" value="${P.C.THRESHOLD_DEFAULT}"></label>
         <small>0 = exact · 15 = nearby · 100 = very broad</small>
         <button id="preview" class="primary">Preview</button><button id="save" class="primary" disabled>Add rule & save</button>
@@ -30,7 +33,8 @@
       this.$ = id => root.getElementById(id);
       this.selected = false; this.previewing = false;
       this.profile = structuredClone(this.state.profiles[this.host] || P.Model.profile(this.host));
-      this.newRule = P.Model.rule();
+      this.newRule = P.Model.rule('#28A745', this.profile.rules.length, this.host);
+      this.$('name').value = this.newRule.name;
       this.hover = e => {
         if (this.previewing || e.composedPath().includes(this.hostElement) || !(e.target instanceof Element)) return;
         const rect = e.target.getBoundingClientRect();
@@ -48,12 +52,15 @@
       this.key = e => { if (e.key === 'Escape') { e.preventDefault(); this.stop(); } else if (e.key === 'Enter' && !e.composedPath().includes(this.hostElement)) this.choose(e); };
       document.addEventListener('pointermove', this.hover, true); document.addEventListener('click', this.choose, true); document.addEventListener('keydown', this.key, true);
       this.$('property').onchange = () => this.select(this.$('property').value);
+      this.$('name').oninput = () => { this.newRule.name = this.$('name').value.trim(); this.newRule.customName = true; this.update(); };
+      this.$('default-name').onclick = () => { this.newRule.customName = false; this.newRule.name = P.Model.defaultRuleName(this.profile.rules.length, this.host); this.$('name').value = this.newRule.name; this.update(); };
       this.$('cancel').onclick = () => this.stop();
       this.$('target').oninput = () => { this.$('hex').value = this.$('target').value.toUpperCase(); this.update(); };
       this.$('hex').oninput = () => { const c = P.Color.hexToRgb(this.$('hex').value); if (c) this.$('target').value = P.Color.rgbToHex(c); this.update(); };
       this.$('source').oninput = () => { this.selected = true; this.update(); };
       this.$('range').oninput = () => { this.$('value').value = this.$('range').value; this.update(); };
       this.$('preview').onclick = () => { this.previewing = true; this.$('box').style.display = 'none'; this.update(); };
+      this.$('recommend').onclick = () => this.recommend();
       this.$('save').onclick = async () => {
         try {
           if (!this.update()) return;
@@ -74,15 +81,38 @@
           this.select(result.sRGBHex); this.$('source').focus();
         } catch (e) { if (e.name !== 'AbortError') this.$('notice').textContent = 'Screen eyedropper unavailable. Click a page element instead.'; }
       };
+      setTimeout(() => this.renderSuggestions(), 0);
       this.$('cancel').focus();
     }
-    select(hex) { this.selected = true; this.$('source').value = hex; this.$('notice').textContent = `Detected ${hex}. Choose a replacement, then preview.`; this.update(); }
+    renderSuggestions() {
+      if (!this.hostElement) return;
+      try {
+        const report = this.scanner.confusingColors(); const box = this.$('suggestions'); box.replaceChildren();
+        if (!report.suggestions.length) { const empty = document.createElement('small'); empty.textContent = `No strong confusion pairs found among ${report.unique} page colors. You can still click any element.`; box.append(empty); return; }
+        for (const item of report.suggestions) {
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'suggestion';
+          const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = item.hex; dot.setAttribute('aria-hidden', 'true');
+          const text = document.createElement('span'); text.append(`${item.hex} · used ${item.count}×`);
+          const hint = document.createElement('span'); hint.className = 'hint'; hint.textContent = `May resemble ${item.mate} with ${item.type === 'protan' ? 'protan' : 'deutan'} vision`; text.append(document.createElement('br'), hint);
+          button.append(dot, text); button.onclick = () => { this.select(item.hex, item.mate); this.$('source').focus(); };
+          box.append(button);
+        }
+      } catch (e) { this.$('suggestions').textContent = 'Page color analysis was unavailable. Click an element instead.'; }
+    }
+    recommend() {
+      const suggestion = P.Color.recommendTarget(this.$('source').value.trim(), this.currentMate ? [this.currentMate] : []);
+      if (!suggestion) { this.$('notice').textContent = 'Choose a valid source color first.'; return; }
+      this.$('target').value = suggestion.hex; this.$('hex').value = suggestion.hex;
+      this.$('notice').textContent = suggestion.exactChroma ? `Suggested ${suggestion.hex}; OKLCH brightness and saturation are preserved.` : `Suggested ${suggestion.hex}; brightness is preserved and saturation was reduced slightly to fit sRGB.`;
+      this.update();
+    }
+    select(hex, mate = null) { this.selected = true; this.currentMate = mate; this.$('source').value = hex; this.$('notice').textContent = `Detected ${hex}. Choose a replacement, then preview.`; this.update(); }
     update() {
       const source = this.$('source').value.trim(), target = this.$('hex').value.trim();
-      const valid = this.selected && [source, target].every(v => /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(v));
+      const valid = this.selected && this.$('name').value.trim() && [source, target].every(v => /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(v));
       this.$('save').disabled = !valid;
       if (!valid) { this.$('notice').textContent = 'Select a color and enter valid #RGB or #RRGGBB values.'; return false; }
-      Object.assign(this.newRule, { source: P.Color.rgbToHex(P.Color.hexToRgb(source)), target: P.Color.rgbToHex(P.Color.hexToRgb(target)), threshold: Number(this.$('range').value) });
+      Object.assign(this.newRule, { name: this.$('name').value.trim(), source: P.Color.rgbToHex(P.Color.hexToRgb(source)), target: P.Color.rgbToHex(P.Color.hexToRgb(target)), threshold: Number(this.$('range').value) });
       if (this.previewing) {
         try {
           const profile = structuredClone(this.profile); profile.rules.push(this.newRule); this.preview(profile);

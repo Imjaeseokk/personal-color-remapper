@@ -1,4 +1,4 @@
-# Chrome 업로드 안내 — 1.1.0
+# Chrome 업로드 안내 — 1.2.0
 
 ## 1. 내 Chrome에서 사용하기
 
@@ -13,10 +13,10 @@ ZIP은 먼저 압축을 풀어야 합니다. 기존 소스 폴더 버전을 설�
 
 ## 2. Chrome Web Store에 제출하기
 
-업로드할 파일: **dist/personal-color-remapper-1.1.0-chrome.zip**
+업로드할 파일: **dist/personal-color-remapper-1.2.0-chrome.zip**
 
 - ZIP 루트에 manifest.json이 있습니다.
-- 실행 파일 23개만 포함합니다.
+- 실행 파일 26개만 포함합니다.
 - 테스트, npm 의존성, Git, 소스용 README, 스토어 자료는 제외했습니다.
 - 공식 안내: https://developer.chrome.com/docs/webstore/prepare
 
@@ -54,4 +54,4 @@ npm run package
 
 버전을 올릴 때 manifest.json과 package.json/package-lock.json을 함께 갱신합니다. dist/BUILD-INFO.json에 파일 목록·SHA-256이 생성됩니다. store/는 ZIP과 별도로 대시보드에 제출하는 자료입니다.
 
-이전 루트의 personal-color-remapper-v1.0.0.zip은 개발 파일까지 포함한 구버전입니다. 새 제출에는 dist/의 1.1.0 ZIP을 사용하세요.
+이전 ZIP은 구버전입니다. 새 제출에는 dist의 1.2.0 ZIP을 사용하세요.

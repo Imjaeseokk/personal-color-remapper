@@ -17,7 +17,7 @@ function render() {
   draft = structuredClone(state.profiles[host] || Model.profile(host));
   $('enabled').checked = state.settings.enabled; $('enabled').nextSibling.textContent = state.settings.enabled ? 'ON' : 'OFF'; $('site-enabled').checked = draft.enabled; $('name').value = draft.name;
   $('global-info').textContent = state.globalProfile.enabled ? `${state.globalProfile.rules.filter(r => r.enabled).length} global rules also apply after site rules.` : 'Global palette is OFF.';
-  editor.set(draft.rules); dirty = false;
+  editor.set(draft.rules, host); dirty = false;
 }
 async function ensureContent() {
   try { await chrome.tabs.sendMessage(tab.id, { type: C.MSG.GET }); }

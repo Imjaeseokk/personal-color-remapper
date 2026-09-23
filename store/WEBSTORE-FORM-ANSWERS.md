@@ -102,7 +102,7 @@ The user can export a JSON backup to their own device. The export can contain th
 - [ ] 연락처 이메일 인증 완료
 - [ ] 스토어 화면 캡처 최소 1개 업로드: `store/screenshots/`
 - [ ] 440×280 프로모션 이미지 업로드: `store/assets/promo-440x280.png`
-- [ ] `dist/personal-color-remapper-1.1.0-chrome.zip` 업로드
+- [ ] `dist/personal-color-remapper-1.2.0-chrome.zip` 업로드
 - [ ] **임시저장** 클릭 후 오류가 사라졌는지 확인
 
 관련 파일:

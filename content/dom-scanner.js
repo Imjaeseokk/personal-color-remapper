@@ -138,6 +138,27 @@
         return P.C.PROPERTIES.map(property => ({ property, color: this.engine.parse(style.getPropertyValue(property))?.rgb })).filter(x => x.color && x.color.a > 0);
       } finally { this.sheet.disabled = false; }
     }
+    confusingColors(limit = P.C.CONFUSION_SUGGESTION_LIMIT) {
+      const counts = new Map(); let sampled = 0;
+      this.sheet.disabled = true;
+      try {
+        const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_ELEMENT);
+        for (let el = walker.currentNode; el && sampled < P.C.PAGE_COLOR_SAMPLE_LIMIT; el = walker.nextNode()) {
+          if (this.ignored(el)) continue;
+          const rect = el.getBoundingClientRect();
+          if (!rect.width || !rect.height) continue;
+          sampled++;
+          const style = getComputedStyle(el);
+          for (const property of P.C.PROPERTIES) {
+            const rgb = this.engine.parse(style.getPropertyValue(property))?.rgb;
+            if (!rgb || rgb.a < 0.1) continue;
+            const hex = P.Color.rgbToHex(rgb); counts.set(hex, (counts.get(hex) || 0) + 1);
+          }
+        }
+      } finally { this.sheet.disabled = false; }
+      const entries = [...counts].map(([hex, count]) => ({ hex, count })).sort((a, b) => b.count - a.count).slice(0, P.C.PAGE_COLOR_UNIQUE_LIMIT);
+      return { sampled, unique: counts.size, suggestions: P.Color.confusionCandidates(entries, limit) };
+    }
     getStats() {
       return { ...this.stats, active: this.active, pending: this.roots.size + this.walkers.length,
         retainedElements: this.records.size, cssRuleSlots: this.sheet.cssRules.length,

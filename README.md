@@ -9,12 +9,16 @@ Manifest V3 · Vanilla JavaScript · 외부 서버 없음 · 로컬 저장
 - Source/Target 색상 선택과 직접 HEX 입력, 실시간 validation
 - OKLab 기반 유사도 슬라이더, 원본 알파 유지
 - 여러 규칙의 활성화·삭제·순서 변경
+- 규칙별 이름, `rule_{number}_{hostname}` 기본 이름, Rename/Default 복원
 - 사이트별 프로필과 전역 프로필, 전체 및 현재 사이트 ON/OFF
 - Popup의 실시간 미리보기, Cancel 및 Popup 종료 시 미저장 변경 원복
 - 페이지 안의 DOM 색상 선택기와 Chrome EyeDropper 버튼
+- 현재 페이지의 적록 색각 혼동 후보 분석과 바로 선택
+- OKLCH 밝기·채도를 보존하는 자동 대체색 추천
 - Options의 프로필 이름 변경·복제·삭제·JSON Import/Export·Reset
 - 동적 DOM 검사, 변경된 subtree batching, 계산 결과 캐시
 - V1.1: 생성된 ::before/::after 색상 치환, 스타일시트 제거 재평가, 적응형 batch 처리
+- V1.2: 규칙 이름, 적록 혼동 후보, 자동 대체색, 내장 HTML 사용 가이드
 - 키보드 조작, 명시적 label, HEX 텍스트, focus 표시, 상태 메시지
 
 ## Installation — Chrome Load Unpacked
@@ -45,13 +49,19 @@ Manifest V3 · Vanilla JavaScript · 외부 서버 없음 · 로컬 저장
 1. **Pick color from page**를 누릅니다. 해당 사이트의 지속 권한을 요청합니다.
 2. Popup이 닫히고 페이지 오른쪽 위에 색상 선택 패널이 열립니다.
 3. 페이지의 요소를 클릭합니다. 기본 선택은 text `color`이며 **Element color property**에서 background, border, fill 등 실제 원하는 속성을 선택할 수 있습니다. 각 옵션에 속성명과 HEX가 표시됩니다.
-4. 또는 패널의 **Screen eyedropper**를 누릅니다. API가 없으면 이 버튼만 비활성화됩니다.
-5. Target 및 Similarity를 지정하고 **Preview**를 누릅니다. 이후 입력은 즉시 미리보기에 반영됩니다.
-6. **Add rule & save**로 현재 도메인에 저장하거나 **Cancel / Escape**로 원복합니다.
+4. **Likely red/green confusion colors**에서 현재 페이지의 적록 색각 혼동 후보를 바로 Source로 선택할 수도 있습니다.
+5. **Auto target · same brightness & saturation**으로 OKLCH 밝기·채도를 유지한 대체색을 추천받거나 직접 Target을 고릅니다.
+6. 또는 패널의 **Screen eyedropper**를 누릅니다. API가 없으면 이 버튼만 비활성화됩니다.
+7. Similarity를 지정하고 **Preview**를 누릅니다. 이후 입력은 즉시 미리보기에 반영됩니다.
+8. **Add rule & save**로 현재 도메인에 저장하거나 **Cancel / Escape**로 원복합니다.
 
 DOM picker는 원본 computed CSS 색상을 읽습니다. Screen eyedropper는 화면에 보이는 합성 픽셀을 읽으므로 투명도·이미지·기존 변환의 영향을 받습니다. 이미지 픽셀을 선택할 수 있어도 이미지 자체를 치환하는 것은 아닙니다. 페이지 패널에서 직접 버튼을 눌러 EyeDropper의 transient user activation 요건을 충족합니다. API 오류가 나면 DOM 선택을 계속 사용할 수 있습니다.
 
 키보드로는 Tab으로 페이지 요소에 이동해 Enter로 선택하거나 패널의 Source HEX를 직접 입력할 수 있습니다. Escape는 선택과 미리보기를 취소합니다. 패널은 비모달이며 페이지 탐색을 막는 focus trap을 사용하지 않습니다.
+
+적록 혼동 후보는 페이지에서 최대 2,500개 표시 요소와 240개 고빈도 색을 표본으로 수집한 뒤, protan/deutan 시뮬레이션에서 정상 OKLab 거리보다 크게 가까워지는 색상 쌍을 순위화합니다. 진단 결과가 아니므로 실제 불편 여부는 Preview로 확인해야 합니다. 자동 Target은 원본 OKLCH L/C를 유지하고 파랑·청록·보라 후보 중 시뮬레이션 구분 거리가 큰 색을 선택합니다. 동일 L/C가 sRGB gamut 밖이면 L은 유지하고 C만 표시 가능한 범위까지 줄입니다.
+
+Popup과 Options의 **User guide**는 Extension에 포함된 오프라인 가이드를 엽니다. 공개 가이드는 [GitHub Pages](https://imjaeseokk.github.io/personal-color-remapper/guide/guide.html)에서도 볼 수 있습니다.
 
 ### Palette 관리
 
@@ -163,14 +173,14 @@ Classic isolated-world scripts는 namespace에 모듈을 노출합니다. conten
       "enabled": true,
       "name": "GitHub Work",
       "rules": [
-        { "id": "example-rule", "enabled": true, "source": "#28A745", "target": "#2979FF", "threshold": 15 }
+        { "id": "example-rule", "name": "Success green", "customName": true, "enabled": true, "source": "#28A745", "target": "#2979FF", "threshold": 15 }
       ]
     }
   }
 }
 ```
 
-Export에는 `schemaVersion: 1`, `exportedAt`이 포함됩니다. 현재는 v1만 지원하며 미래 버전 데이터는 조용히 다운그레이드하지 않고 오류를 표시합니다. 추후 migration을 Model validation 앞에 추가할 수 있습니다. 손상된 storage는 content script에서 적용을 중지하고 Options에서 Import/Reset으로 복구할 수 있습니다. 원본 손상 데이터를 자동 덮어쓰지 않습니다. 제한: 프로필 500개, 프로필당 규칙 100개, import 파일 2 MB. V1에서 정의하지 않은 rule 확장 필드는 정규화 시 제거하므로 추후 도입 시 schema 변경이 필요합니다.
+Export에는 `schemaVersion: 1`, `exportedAt`이 포함됩니다. 이름이 없는 V1.0/V1.1 규칙은 읽을 때 `rule_{number}_{hostname}`으로 안전하게 보완됩니다. 현재는 v1만 지원하며 미래 버전 데이터는 조용히 다운그레이드하지 않고 오류를 표시합니다. 손상된 storage는 content script에서 적용을 중지하고 Options에서 Import/Reset으로 복구할 수 있습니다. 원본 손상 데이터를 자동 덮어쓰지 않습니다. 제한: 프로필 500개, 프로필당 규칙 100개, import 파일 2 MB.
 
 ## Permissions
 
@@ -252,14 +262,14 @@ npm run fixture
 
 계정·서버·community cloud·AI recommendation은 MVP에 포함하지 않습니다.
 
-## V1.1 release files
+## V1.2 release files
 
 - **Chrome Load Unpacked:** `dist/chrome-unpacked/`
-- **Chrome Web Store ZIP:** `dist/personal-color-remapper-1.1.0-chrome.zip`
+- **Chrome Web Store ZIP:** `dist/personal-color-remapper-1.2.0-chrome.zip`
 - **스토어 제출 안내·문안·이미지:** [store/UPLOAD-GUIDE.md](store/UPLOAD-GUIDE.md)
 - **포함 파일 및 SHA-256:** `dist/BUILD-INFO.json`
 
-`npm run package`는 허용 목록의 실행 파일 23개만 복사합니다. 테스트·Git·node_modules·개발 문서·스토어 제출 자료는 ZIP에 들어가지 않습니다. 같은 소스는 같은 ZIP 바이트를 만듭니다. 기존 루트의 V1.0 ZIP 대신 새 dist ZIP을 사용하세요.
+`npm run package`는 허용 목록의 실행 파일 26개만 복사합니다. 테스트·Git·node_modules·개발 문서·스토어 제출 자료는 ZIP에 들어가지 않습니다. 같은 소스는 같은 ZIP 바이트를 만듭니다. 기존 ZIP 대신 V1.2 ZIP을 사용하세요.
 
 `npm run test:sites`는 로그인하지 않은 격리 Chrome으로 공개 GitHub 저장소와 Grafana Play의 실제 CSS 색상 적용/원복을 확인합니다. `npm run test:browser`에는 기본 60초 반복 SPA 검사가 포함됩니다. `PCR_EXTENSION_DIR=dist/chrome-unpacked`로 배포 파일 자체를 검사할 수 있습니다. 테스트 배율 설정 `PCR_SOAK_MS`는 기본 60000입니다.
 

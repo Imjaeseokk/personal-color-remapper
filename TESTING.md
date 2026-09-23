@@ -1,18 +1,22 @@
-# V1.1 verification — 2026-09-20
+# V1.2 verification — 2026-09-23
 
 Windows · Node.js 24.12.0 · isolated installed Chrome 153.0.8010.48
 
-- 10 pure unit tests passed.
+- 13 pure unit tests passed.
 - 15 local browser integration scenarios passed against dist/chrome-unpacked.
-- New coverage: independent ::before/::after colors, stylesheet removal, text-driven :empty changes, 60-second SPA mutation churn.
-- Soak: 625 cycles / 60,043 ms, 80 elements created and removed per cycle. Retained-element references: 20 before / 20 after. CSS rule slots: 2,021 before / 2,021 peak / 2,021 after. Idle queue at completion. The free-slot pool retains its high-water allocation; this checks bounded references/slots, not full browser heap leak freedom.
+- New coverage: default/custom rule names and legacy migration, red/green confusion candidates, OKLCH target recommendation, picker suggestions, automatic target, renamed-rule persistence, and the packaged guide.
+- Full soak: 340 cycles / 60,228 ms, 80 elements created and removed per cycle. Retained-element references: 20 before / 20 after. Idle queue at completion. The free-slot pool retains its high-water allocation; this checks bounded references/slots, not full browser heap leak freedom.
 - Adaptive batches target 8ms but are not a hard frame-time guarantee. Slow initial style/layout may exceed the target.
 - Public-site results, sampled colors and timings: test-results/sites.json. This is a logged-out public-page smoke test, not certification of all GitHub/Grafana pages, company instances or long-lived authenticated sessions.
-- Store assets were rendered at 1280×800 (actual Options), 440×280 (promotion), and 128×128 (icon with padding). No real user data appears in them.
+- Guide, Popup, picker and Options screenshots were rendered and visually inspected. No real user data appears in them.
 
 ## Remaining manual boundaries
 
-Actual toolbar Popup opening/dismissal, OS native EyeDropper and first-time permission prompts still require normal Chrome UI checks. Shadow DOM, frames, canvas/media pixels, inline !important and running transitions remain outside the supported scope. No Web Store submission or external policy hosting was performed.
+Actual toolbar Popup opening/dismissal, OS native EyeDropper and first-time permission prompts still require normal Chrome UI checks. Shadow DOM, frames, canvas/media pixels, inline !important and running transitions remain outside the supported scope. GitHub Pages hosts the public guide and privacy notice; Chrome Web Store submission remains a manual publisher step.
+
+## Previous V1.1 report
+
+V1.1 added independent ::before/::after colors, stylesheet removal, text-driven :empty changes, and adaptive batching. Its 60-second soak completed 625 cycles / 60,043 ms with retained-element references stable at 20.
 
 ## Previous V1.0 report
 

@@ -14,6 +14,8 @@ const runtime = [
   'background/service-worker.js',
   ...['content', 'color-engine', 'dom-scanner', 'picker'].map(n => 'content/' + n + '.js'),
   ...['popup', 'options'].flatMap(n => ['html', 'css', 'js'].map(ext => n + '/' + n + '.' + ext)),
+  'guide/guide.html', 'guide/guide.css',
+  'privacy.html',
   'ui/shared.css', 'ui/rule-editor.js',
   ...['constants', 'color', 'domain', 'model', 'storage'].map(n => 'utils/' + n + '.js')
 ].sort();
@@ -26,6 +28,7 @@ assert.equal(manifest.host_permissions, undefined, 'Do not package fixture host 
 for (const file of [manifest.action.default_popup, manifest.options_page, manifest.background.service_worker, ...Object.values(manifest.icons)]) assert.ok(runtime.includes(file), 'Missing ' + file);
 for (const entry of entries.filter(e => e.name.endsWith('.html'))) {
   for (const match of entry.data.toString().matchAll(/(?:src|href)="([^"]+)"/g)) {
+    if (match[1].startsWith('#')) continue;
     const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(entry.name), match[1]));
     assert.ok(runtime.includes(resolved), 'Missing or remote UI dependency: ' + resolved);
   }

@@ -29,6 +29,27 @@ test('OKLab reference values and distance scale', () => {
   assert.equal(Color.distance(lab, lab), 0);
   assert.ok(Math.abs(Color.distance(Color.toOklab(Color.hexToRgb('#000')), Color.toOklab(Color.hexToRgb('#fff'))) - 100) < 1e-5);
 });
+test('OKLCH target recommendation preserves lightness and chroma when in gamut', () => {
+  const suggestion = Color.recommendTarget('#28A745');
+  assert.equal(suggestion.hex, '#707EF4'); assert.equal(suggestion.exactChroma, true);
+  const source = Color.toOklch(Color.hexToRgb('#28A745')); const target = Color.toOklch(Color.hexToRgb(suggestion.hex));
+  assert.ok(Math.abs(source[0] - target[0]) < .003); assert.ok(Math.abs(source[1] - target[1]) < .003);
+});
+test('Red and green page colors are surfaced as simulated confusion candidates', () => {
+  const suggestions = Color.confusionCandidates([{ hex: '#FF0000', count: 10 }, { hex: '#008000', count: 8 }, { hex: '#0000FF', count: 3 }]);
+  assert.equal(suggestions[0].hex, '#FF0000'); assert.equal(suggestions[0].mate, '#008000');
+  assert.ok(suggestions[0].simulated < suggestions[0].normal);
+});
+test('Rule names migrate safely and defaults use order plus hostname', () => {
+  const state = Model.defaults(); const legacy = Model.rule('#FF0000'); delete legacy.name; delete legacy.customName;
+  state.profiles['github.com'] = { ...Model.profile('GitHub'), rules: [legacy, Model.rule('#00FF00')] };
+  const valid = Model.validate(state);
+  assert.equal(valid.profiles['github.com'].rules[0].name, 'rule_1_github.com');
+  assert.equal(valid.profiles['github.com'].rules[1].name, 'rule_2_github.com');
+  assert.equal(valid.profiles['github.com'].rules[0].customName, false);
+  valid.profiles['github.com'].rules[0].name = 'Status red'; valid.profiles['github.com'].rules[0].customName = true;
+  assert.equal(Model.validate(valid).profiles['github.com'].rules[0].name, 'Status red');
+});
 test('Threshold expands perceptual match and target alpha stays original', () => {
   const engine = new ColorEngine(); const rule = { ...Model.rule('#FF0000'), threshold: 0 };
   engine.setRules([rule]); assert.equal(engine.transform('#F50000'), null);

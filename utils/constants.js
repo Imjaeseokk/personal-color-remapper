@@ -5,6 +5,7 @@
     THRESHOLD_DEFAULT: 15, BATCH_SIZE: 250, BATCH_MIN: 20, BATCH_BUDGET_MS: 8, MUTATION_DELAY: 60,
     PSEUDOS: ['', '::before', '::after'],
     CACHE_LIMIT: 4096, MAX_PROFILES: 500, MAX_RULES: 100, MAX_IMPORT_BYTES: 2_000_000,
+    PAGE_COLOR_SAMPLE_LIMIT: 2500, PAGE_COLOR_UNIQUE_LIMIT: 240, CONFUSION_SUGGESTION_LIMIT: 8,
     PORT: 'pcr-preview',
     PROPERTIES: ['color', 'background-color', 'border-top-color', 'border-right-color',
       'border-bottom-color', 'border-left-color', 'outline-color', 'text-decoration-color', 'fill', 'stroke'],
