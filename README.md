@@ -13,12 +13,12 @@ Manifest V3 · Vanilla JavaScript · 외부 서버 없음 · 로컬 저장
 - 사이트별 프로필과 전역 프로필, 전체 및 현재 사이트 ON/OFF
 - Popup의 실시간 미리보기, Cancel 및 Popup 종료 시 미저장 변경 원복
 - 페이지 안의 DOM 색상 선택기와 Chrome EyeDropper 버튼
-- 현재 페이지의 적록 색각 혼동 후보 분석과 바로 선택
+- 현재 페이지의 적녹 색각 혼동 후보 분석과 바로 선택
 - OKLCH 밝기·채도를 보존하는 자동 대체색 추천
 - Options의 프로필 이름 변경·복제·삭제·JSON Import/Export·Reset
 - 동적 DOM 검사, 변경된 subtree batching, 계산 결과 캐시
 - V1.1: 생성된 ::before/::after 색상 치환, 스타일시트 제거 재평가, 적응형 batch 처리
-- V1.2: 규칙 이름, 적록 혼동 후보, 자동 대체색, 내장 HTML 사용 가이드
+- V1.2: 규칙 이름, 적녹 혼동 후보, 자동 대체색, 내장 HTML 사용 가이드
 - 키보드 조작, 명시적 label, HEX 텍스트, focus 표시, 상태 메시지
 
 ## Installation — Chrome Load Unpacked
@@ -49,7 +49,7 @@ Manifest V3 · Vanilla JavaScript · 외부 서버 없음 · 로컬 저장
 1. **Pick color from page**를 누릅니다. 해당 사이트의 지속 권한을 요청합니다.
 2. Popup이 닫히고 페이지 오른쪽 위에 색상 선택 패널이 열립니다.
 3. 페이지의 요소를 클릭합니다. 기본 선택은 text `color`이며 **Element color property**에서 background, border, fill 등 실제 원하는 속성을 선택할 수 있습니다. 각 옵션에 속성명과 HEX가 표시됩니다.
-4. **Likely red/green confusion colors**에서 현재 페이지의 적록 색각 혼동 후보를 바로 Source로 선택할 수도 있습니다.
+4. **Likely red/green confusion colors**에서 현재 페이지의 적녹 색각 혼동 후보를 바로 Source로 선택할 수도 있습니다.
 5. **Auto target · same brightness & saturation**으로 OKLCH 밝기·채도를 유지한 대체색을 추천받거나 직접 Target을 고릅니다.
 6. 또는 패널의 **Screen eyedropper**를 누릅니다. API가 없으면 이 버튼만 비활성화됩니다.
 7. Similarity를 지정하고 **Preview**를 누릅니다. 이후 입력은 즉시 미리보기에 반영됩니다.
@@ -59,7 +59,7 @@ DOM picker는 원본 computed CSS 색상을 읽습니다. Screen eyedropper는 �
 
 키보드로는 Tab으로 페이지 요소에 이동해 Enter로 선택하거나 패널의 Source HEX를 직접 입력할 수 있습니다. Escape는 선택과 미리보기를 취소합니다. 패널은 비모달이며 페이지 탐색을 막는 focus trap을 사용하지 않습니다.
 
-적록 혼동 후보는 페이지에서 최대 2,500개 표시 요소와 240개 고빈도 색을 표본으로 수집한 뒤, protan/deutan 시뮬레이션에서 정상 OKLab 거리보다 크게 가까워지는 색상 쌍을 순위화합니다. 진단 결과가 아니므로 실제 불편 여부는 Preview로 확인해야 합니다. 자동 Target은 원본 OKLCH L/C를 유지하고 파랑·청록·보라 후보 중 시뮬레이션 구분 거리가 큰 색을 선택합니다. 동일 L/C가 sRGB gamut 밖이면 L은 유지하고 C만 표시 가능한 범위까지 줄입니다.
+적녹 혼동 후보는 페이지에서 최대 2,500개 표시 요소와 240개 고빈도 색을 표본으로 수집한 뒤, protan/deutan 시뮬레이션에서 정상 OKLab 거리보다 크게 가까워지는 색상 쌍을 순위화합니다. 진단 결과가 아니므로 실제 불편 여부는 Preview로 확인해야 합니다. 자동 Target은 원본 OKLCH L/C를 유지하고 파랑·청록·보라 후보 중 시뮬레이션 구분 거리가 큰 색을 선택합니다. 동일 L/C가 sRGB gamut 밖이면 L은 유지하고 C만 표시 가능한 범위까지 줄입니다.
 
 Popup과 Options의 **User guide**는 Extension에 포함된 오프라인 가이드를 엽니다. 공개 가이드는 [GitHub Pages](https://imjaeseokk.github.io/personal-color-remapper/guide/guide.html)에서도 볼 수 있습니다.
 

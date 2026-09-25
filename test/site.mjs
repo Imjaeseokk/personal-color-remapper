@@ -21,13 +21,19 @@ try {
   await page.evaluate(() => localStorage.removeItem('pcr-site-language'));
   await page.reload({ waitUntil: 'networkidle' });
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
-  assert.equal(await page.locator('[data-site-language]').inputValue(), 'en');
+  assert.equal(await page.locator('[data-language-choice="en"]').getAttribute('aria-checked'), 'true');
   assert.equal(await page.locator('.brand img').first().getAttribute('src'), 'icons/new-icon.png');
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).wordBreak), 'keep-all');
-  await page.locator('[data-site-language]').selectOption('ko');
+  assert.match(await page.evaluate(() => getComputedStyle(document.documentElement).fontFamily), /Pretendard/);
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll('a')].every(link => getComputedStyle(link).textDecorationLine === 'none')), true);
+  assert.equal(await page.locator('figcaption').count(), 0);
+  assert.equal(await page.locator('img[src*="popup-native.png"]').count() >= 1, true);
+  await page.locator('.language-trigger').click();
+  await page.locator('[data-language-choice="ko"]').click();
   assert.equal(await page.locator('html').getAttribute('lang'), 'ko');
   assert.match(await page.locator('h1').first().textContent(), /어떤 색/);
-  await page.locator('[data-site-language]').selectOption('en');
+  await page.locator('.language-trigger').click();
+  await page.locator('[data-language-choice="en"]').click();
   assert.ok((await page.locator('meta[name="description"]').getAttribute('content')).length >= 80);
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), 'https://imjaeseokk.github.io/personal-color-remapper/');
   for (const text of await page.locator('script[type="application/ld+json"]').allTextContents()) JSON.parse(text);
@@ -37,9 +43,18 @@ try {
   await mkdir(path.join(root, 'test-results'), { recursive: true });
   await page.screenshot({ path: path.join(root, 'test-results/site-home-desktop.png'), fullPage: true });
   await page.goto(new URL('updates/1.2.0.html', base).href); await page.screenshot({ path: path.join(root, 'test-results/site-update-desktop.png'), fullPage: true });
-  await page.getByRole('tab', { name: 'English' }).click();
+  await page.locator('.language-trigger').click();
+  await page.locator('[data-language-choice="en"]').click();
   assert.equal(await page.locator('[data-language="en"]').isVisible(), true);
   assert.equal(await page.locator('[data-language="ko"]').isHidden(), true);
+  await page.goto(new URL('guide/guide.html', base).href, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('.site-header').count(), 1);
+  assert.equal(await page.locator('.guide-section:visible').count(), 7);
+  assert.equal(await page.locator('.guide-step').first().evaluate(element => getComputedStyle(element).borderRadius), '0px');
+  await page.locator('.language-trigger').click();
+  await page.locator('[data-language-choice="ko"]').click();
+  assert.match(await page.locator('h1').textContent(), /첫 색상 규칙/);
+  assert.equal(await page.locator('[data-language="ko"]').isVisible(), true);
   for (const width of [390, 640, 1024, 1920]) {
     await page.setViewportSize({ width, height: 844 }); await page.goto(base, { waitUntil: 'networkidle' });
     const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(element => {

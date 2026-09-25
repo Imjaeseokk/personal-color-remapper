@@ -75,6 +75,9 @@ try {
   await popup.waitForSelector('#name:enabled');
   await popup.addStyleTag({ content: 'html{background:#f4f6f8}body{margin:70px auto!important;box-shadow:0 22px 60px #18283d45;border-radius:14px;overflow:hidden}' });
   await popup.screenshot({ path: path.join(output, 'rule-editor.png'), type: 'png', omitBackground: false });
+  await popup.setViewportSize({ width: 390, height: 600 });
+  await popup.addStyleTag({ content: 'html{background:#fff}body{margin:0!important;box-shadow:none;border-radius:0}' });
+  await popup.screenshot({ path: path.join(output, 'popup-native.png'), type: 'png', omitBackground: false });
 
   const options = await context.newPage();
   await options.setViewportSize({ width: 1280, height: 800 });
@@ -82,7 +85,7 @@ try {
   await options.waitForFunction(() => document.querySelector('#profiles').options.length >= 2);
   await options.selectOption('#profiles', '127.0.0.1');
   await options.screenshot({ path: path.join(output, 'advanced-options.png'), type: 'png', omitBackground: false });
-  console.log('Created 4 screenshots from the unpacked extension running in Chrome.');
+  console.log('Created 5 screenshots from the unpacked extension running in Chrome.');
 } finally {
   await context?.close();
   await new Promise(resolve => server.close(resolve));
